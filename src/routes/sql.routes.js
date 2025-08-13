@@ -1,8 +1,19 @@
+// routes/sql.routes.js
 const express = require('express');
-const { getSales, getSaleByOrderId } = require('../controllers/sql.controller');
+const {
+  getDashboardOrders,
+  createOrder,
+  getOrderById,
+  updateOrder,
+  deleteOrder
+} = require('../controllers/sql.controller');
+
 const router = express.Router();
 
-router.get('/sales', getSales); // /api/sql/sales?region=...&country=...&itemType=...&limit=50
-router.get('/sales/:orderId', getSaleByOrderId);
+router.get('/orders', getDashboardOrders); // Dashboard filtrable
+router.post('/orders', createOrder);
+router.get('/orders/:orderId', getOrderById);
+router.put('/orders/:orderId', updateOrder);
+router.delete('/orders/:orderId', deleteOrder);
 
 module.exports = router;
