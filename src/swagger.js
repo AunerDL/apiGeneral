@@ -12,14 +12,21 @@ const options = {
     servers: [
       {
         url: 'http://localhost:5000/api',
+        description: 'Servidor local'
       },
     ],
   },
-  apis: ['./routes/*.js'], // Ruta a tus archivos de rutas
+  apis: ['./src/routes/*.js'], // Ruta corregida a tus archivos de rutas
 };
 
 const specs = swaggerJsdoc(options);
 
 module.exports = (app) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+  app.use('/api-docs', 
+    swaggerUi.serve, 
+    swaggerUi.setup(specs, {
+      explorer: true,
+      customSiteTitle: "AdventureWorks API Docs"
+    })
+  );
 };
