@@ -1,19 +1,20 @@
-// routes/sql.routes.js
 const express = require('express');
-const {
-  getDashboardOrders,
-  createOrder,
-  getOrderById,
-  updateOrder,
-  deleteOrder
-} = require('../controllers/sql.controller');
-
 const router = express.Router();
+const sqlController = require('../controllers/sql.controller');
 
-router.get('/orders', getDashboardOrders); // Dashboard filtrable
-router.post('/orders', createOrder);
-router.get('/orders/:orderId', getOrderById);
-router.put('/orders/:orderId', updateOrder);
-router.delete('/orders/:orderId', deleteOrder);
+// Middleware de validación
+const validateOrder = (req, res, next) => {
+  if (!req.body.CustomerID || !req.body.OrderDate) {
+    return res.status(400).json({ error: 'CustomerID y OrderDate son requeridos' });
+  }
+  next();
+};
+
+// Rutas
+router.get('/dashboard/metrics', sqlController.getDashboardMetrics);
+router.post('/orders', validateOrder, sqlController.createOrder);
+router.get('/orders/:orderId', sqlController.getOrderDetails);
+router.put('/orders/:orderId', validateOrder, sqlController.updateOrder);
+router.delete('/orders/:orderId', sqlController.deleteOrder);
 
 module.exports = router;

@@ -1,15 +1,5 @@
+// config/sqlserver.js
 const sql = require('mssql');
-
-// Convertir las opciones de cadena a objeto
-const parseOptions = (optionsString) => {
-  return optionsString.split(';').reduce((acc, option) => {
-    const [key, value] = option.split('=');
-    if (key && value) {
-      acc[key] = value === 'true';
-    }
-    return acc;
-  }, {});
-};
 
 const config = {
   user: process.env.SQL_USER,
@@ -18,33 +8,46 @@ const config = {
   port: parseInt(process.env.SQL_PORT),
   database: process.env.SQL_DATABASE,
   options: {
-    ...parseOptions(process.env.SQL_OPTIONS),
+    encrypt: true, // Siempre usar en producción
+    trustServerCertificate: true, // Solo para desarrollo
     enableArithAbort: true
   },
   pool: {
-    max: 10,
-    min: 0,
-    idleTimeoutMillis: 120000
+    max: 20, // Aumentar para dashboard
+    min: 5,
+    idleTimeoutMillis: 30000,
+    acquireTimeoutMillis: 60000
   }
 };
 
-async function connectSql() {
+let pool;
+
+async function getPool() {
+  if (pool) return pool;
+  
   try {
-    await sql.connect(config);
+    pool = await new sql.ConnectionPool(config).connect();
     console.log(`✅ Conectado a SQL Server en ${config.server}:${config.port}`);
+    return pool;
   } catch (err) {
-    console.error('❌ Error SQL Server:', err.message);
-    // No salgas del proceso inmediatamente, permite reintentos
+    console.error('❌ Error SQL Server:', err);
     throw err;
   }
 }
 
-// Conexión de prueba al iniciar
-connectSql().catch(console.error);
+// Manejador de errores global para la conexión
+sql.on('error', err => {
+  console.error('SQL Server Error:', err);
+  // Aquí podrías implementar reconexión automática
+});
 
 module.exports = {
   sql,
-  getPool: () => sql, // Ya está conectado globalmente
-  connectSql,
-  close: async () => await sql.close()
+  getPool,
+  close: async () => {
+    if (pool) {
+      await pool.close();
+      pool = null;
+    }
+  }
 };
